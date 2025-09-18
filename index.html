@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Judge Panel System</title>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 800px;
+        }
+        
+        .hidden { 
+            display: none !important; 
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e8ed;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            margin: 5px;
+            transition: transform 0.2s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+        }
+        
+        .btn-success {
+            background: #28a745;
+        }
+        
+        .competition-card {
+            border: 2px solid #e1e8ed;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+            background: #f8f9fa;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .competition-card:hover {
+            border-color: #667eea;
+            background: #f0f8ff;
+            transform: translateY(-2px);
+        }
+        
+        .competition-list-card {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .competition-list-card:hover {
+            border-color: #667eea;
+            background: #f0f8ff;
+            transform: translateY(-2px);
+        }
+        
+        .competition-detail-card {
+            cursor: default;
+        }
+        
+        .competition-detail-card:hover {
+            transform: none;
+        }
+        
+        .participant-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+            border-bottom: 1px solid #dee2e6;
+            margin: 5px 0;
+            background: white;
+            border-radius: 8px;
+        }
+        
+        .participant-row:last-child {
+            border-bottom: none;
+        }
+        
+        .score-input {
+            width: 100px;
+            padding: 10px;
+            border: 2px solid #e1e8ed;
+            border-radius: 5px;
+            text-align: center;
+            font-size: 16px;
+        }
+        
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h2 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .progress-bar {
+            background: #e1e8ed;
+            border-radius: 10px;
+            height: 12px;
+            margin: 15px 0;
+        }
+        
+        .progress-fill {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.3s;
+        }
+        
+        .setup-container {
+            text-align: center;
+        }
+        
+        .setup-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 8px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            float: right;
+        }
+        
+        .status-completed {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .competition-summary {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .competition-meta {
+            color: #666;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        
+        .click-hint {
+            color: #667eea;
+            font-size: 14px;
+            font-style: italic;
+            margin-top: 10px;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                margin: 10px;
+                padding: 20px;
+            }
+            
+            .nav-buttons {
+                flex-direction: column;
+            }
+            
+            .participant-row {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+            
+            .score-input {
+                width: 120px;
+            }
+            
+            .competition-summary {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .status-badge {
+                float: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Initial Setup Screen -->
+        <div id="setupScreen" class="setup-container">
+            <div class="setup-icon">🚀</div>
+            <h2>Welcome to Judge Panel System</h2>
+            <p style="margin-bottom: 30px; color: #666;">First time setup - Create your admin account</p>
+            
+            <div class="form-group">
+                <label for="setupUsername">Admin Username:</label>
+                <input type="text" id="setupUsername" placeholder="Enter admin username" required>
+            </div>
+            <div class="form-group">
+                <label for="setupPassword">Admin Password:</label>
+                <input type="password" id="setupPassword" placeholder="Enter admin password (min 6 characters)" required>
+            </div>
+            <div class="form-group">
+                <label for="confirmPassword">Confirm Password:</label>
+                <input type="password" id="confirmPassword" placeholder="Confirm admin password" required>
+            </div>
+            <button class="btn" onclick="createInitialAdmin()" id="setupBtn">
+                Create Admin Account
+            </button>
+            <div id="setupMessage"></div>
+        </div>
+
+        <!-- Login Screen -->
+        <div id="loginScreen" class="hidden">
+            <div class="header">
+                <h2>🏆 Competition Judge System</h2>
+                <p>Please login to continue</p>
+            </div>
+            <div class="form-group">
+                <label for="username">Username:</label>
+                <input type="text" id="username" placeholder="Enter username" autocomplete="username">
+            </div>
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" id="password" placeholder="Enter password" autocomplete="current-password">
+            </div>
+            <button class="btn" onclick="login()">Login</button>
+            <div id="loginMessage"></div>
+        </div>
+
+        <!-- Admin Panel -->
+        <div id="adminPanel" class="hidden">
+            <div class="header">
+                <h2>👨‍💼 Admin Panel</h2>
+                <p>Welcome, <span id="adminUsername"></span>!</p>
+                <div class="nav-buttons">
+                    <button class="btn" onclick="showAddUser()">Add Judge</button>
+                    <button class="btn" onclick="showAddCompetition()">Add Competition</button>
+                    <button class="btn" onclick="showCompetitions()">View Competitions</button>
+                    <button class="btn btn-secondary" onclick="logout()">Logout</button>
+                </div>
+            </div>
+
+            <!-- Add User Form -->
+            <div id="addUserForm" class="hidden">
+                <h3>Add New Judge</h3>
+                <div class="form-group">
+                    <label for="newUsername">Judge Username:</label>
+                    <input type="text" id="newUsername" placeholder="Enter judge username">
+                </div>
+                <div class="form-group">
+                    <label for="newPassword">Judge Password:</label>
+                    <input type="password" id="newPassword" placeholder="Enter judge password (min 6 characters)">
+                </div>
+                <button class="btn" onclick="addUser()">Add Judge</button>
+                <button class="btn btn-secondary" onclick="hideAllForms()">Cancel</button>
+            </div>
+
+            <!-- Add Competition Form -->
+            <div id="addCompetitionForm" class="hidden">
+                <h3>Create New Competition</h3>
+                <div class="form-group">
+                    <label for="competitionName">Competition Name:</label>
+                    <input type="text" id="competitionName" placeholder="Enter competition name">
+                </div>
+                <div class="form-group">
+                    <label for="category">Category:</label>
+                    <input type="text" id="category" placeholder="Enter category (e.g., Dance, Singing, Art)">
+                </div>
+                <div class="form-group">
+                    <label for="totalParticipants">Total Participants:</label>
+                    <input type="number" id="totalParticipants" min="1" max="26" placeholder="Enter participant count (max 26)">
+                    <small style="color: #666;">Participant codes will be auto-generated: A, B, C, etc.</small>
+                </div>
+                <div class="form-group">
+                    <label for="judgeSelect">Assign Judge:</label>
+                    <select id="judgeSelect">
+                        <option value="">Select Judge</option>
+                    </select>
+                </div>
+                <button class="btn" onclick="createCompetition()">Create Competition</button>
+                <button class="btn btn-secondary" onclick="hideAllForms()">Cancel</button>
+            </div>
+
+            <!-- View Competitions -->
+            <div id="competitionsView" class="hidden">
+                <h3>All Competitions</h3>
+                <div id="adminCompetitionsList"></div>
+                <button class="btn btn-secondary" onclick="hideAllForms()">Back</button>
+            </div>
+
+            <div id="adminMessage"></div>
+        </div>
+
+        <!-- Judge Panel -->
+        <div id="judgePanel" class="hidden">
+            <!-- Judge Competition List -->
+            <div id="judgeCompetitionsList">
+                <div class="header">
+                    <h2>⚖️ Judge Panel</h2>
+                    <p>Welcome, <span id="judgeUsername"></span>!</p>
+                    <button class="btn btn-secondary" onclick="logout()">Logout</button>
+                </div>
+                <h3>Your Assigned Competitions</h3>
+                <div id="judgeCompetitionsContainer"></div>
+            </div>
+            
+            <!-- Judge Competition Detail -->
+            <div id="judgeCompetitionDetail" class="hidden">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <button class="btn btn-secondary" onclick="showJudgeCompetitionsList()">← Back to Competitions</button>
+                    <button class="btn btn-secondary" onclick="logout()">Logout</button>
+                </div>
+                <div id="competitionDetailContent"></div>
+            </div>
+            
+            <div id="judgeMessage"></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

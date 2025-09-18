@@ -20,7 +20,7 @@ function showMessage(elementId, message, isError = false) {
 }
 
 function hideAllScreens() {
-    const screens = ['setupScreen', 'loginScreen', 'adminPanel', 'judgePanel'];
+    const screens = ['loginScreen', 'adminPanel', 'judgePanel'];
     screens.forEach(screenId => {
         const element = document.getElementById(screenId);
         if (element) element.classList.add('hidden');
@@ -43,155 +43,10 @@ function generateParticipantCodes(count) {
     return codes;
 }
 
-// Test Supabase connection
-async function testConnection() {
-    try {
-        const { data, error } = await supabaseClient
-            .from('users')
-            .select('count')
-            .limit(1);
-            
-        console.log('Supabase connection test:', { data, error });
-        return !error;
-    } catch (err) {
-        console.error('Connection failed:', err);
-        return false;
-    }
-}
-
-// Initial Setup Functions
-async function checkSystemSetup() {
-    console.log('Checking system setup...');
-    
-    // Test connection first
-    const connected = await testConnection();
-    if (!connected) {
-        showMessage('setupMessage', 'Database connection failed. Please check your Supabase configuration.', true);
-        showSetupScreen();
-        return;
-    }
-    
-    try {
-        // Check if admin already exists
-        const { data: adminExists, error } = await supabaseClient
-            .from('users')
-            .select('id')
-            .eq('role', 'admin')
-            .limit(1);
-
-        console.log('Admin check result:', { adminExists, error });
-
-        if (error) {
-            console.log('Error checking admin (probably first run):', error);
-            showSetupScreen();
-            return;
-        }
-
-        if (adminExists && adminExists.length > 0) {
-            console.log('Admin exists, showing login');
-            showLoginScreen();
-        } else {
-            console.log('No admin found, showing setup');
-            showSetupScreen();
-        }
-    } catch (error) {
-        console.log('System check error:', error);
-        showSetupScreen();
-    }
-}
-
-function showSetupScreen() {
-    hideAllScreens();
-    document.getElementById('setupScreen').classList.remove('hidden');
-}
-
+// Show login screen directly
 function showLoginScreen() {
     hideAllScreens();
     document.getElementById('loginScreen').classList.remove('hidden');
-}
-
-async function createInitialAdmin() {
-    const username = document.getElementById('setupUsername').value.trim();
-    const password = document.getElementById('setupPassword').value.trim();
-    const confirmPassword = document.getElementById('confirmPassword').value.trim();
-
-    // Clear previous messages
-    document.getElementById('setupMessage').innerHTML = '';
-
-    // Validation
-    if (!username || !password || !confirmPassword) {
-        showMessage('setupMessage', 'Please fill in all fields', true);
-        return;
-    }
-
-    if (username.length < 3) {
-        showMessage('setupMessage', 'Username must be at least 3 characters', true);
-        return;
-    }
-
-    if (password.length < 6) {
-        showMessage('setupMessage', 'Password must be at least 6 characters', true);
-        return;
-    }
-
-    if (password !== confirmPassword) {
-        showMessage('setupMessage', 'Passwords do not match', true);
-        return;
-    }
-
-    // Disable button and show loading
-    const setupBtn = document.getElementById('setupBtn');
-    setupBtn.disabled = true;
-    setupBtn.innerHTML = '<span class="loading"></span>Creating...';
-
-    try {
-        console.log('Attempting to create admin:', { username, password: '***' });
-        
-        // Create admin user
-        const { data, error } = await supabaseClient
-            .from('users')
-            .insert([{ 
-                username: username, 
-                password: password, 
-                role: 'admin' 
-            }])
-            .select()
-            .single();
-
-        console.log('Admin creation result:', { data, error });
-
-        if (error) {
-            throw error;
-        }
-
-        showMessage('setupMessage', '✅ Admin account created successfully! You can now login.', false);
-        
-        // Clear form
-        document.getElementById('setupUsername').value = '';
-        document.getElementById('setupPassword').value = '';
-        document.getElementById('confirmPassword').value = '';
-        
-        // Redirect to login after delay
-        setTimeout(() => {
-            showLoginScreen();
-        }, 2000);
-
-    } catch (error) {
-        console.error('Error creating admin:', error);
-        let errorMessage = 'Error creating admin account.';
-        
-        if (error.message.includes('duplicate')) {
-            errorMessage = 'Username already exists. Please choose a different username.';
-        } else if (error.message) {
-            errorMessage += ' ' + error.message;
-        }
-        
-        showMessage('setupMessage', errorMessage, true);
-    } finally {
-        // Re-enable button
-        setupBtn.disabled = false;
-        setupBtn.innerHTML = 'Create Admin Account';
-    }
 }
 
 // Authentication Functions
@@ -685,19 +540,17 @@ async function submitCompetitionScores(competitionId) {
     }
 }
 
-// Handle Enter key for forms
+// Handle Enter key for login
 document.addEventListener('keypress', function(e) {
     if (e.key === 'Enter') {
-        if (!document.getElementById('setupScreen').classList.contains('hidden')) {
-            createInitialAdmin();
-        } else if (!document.getElementById('loginScreen').classList.contains('hidden')) {
+        if (!document.getElementById('loginScreen').classList.contains('hidden')) {
             login();
         }
     }
 });
 
-// Initialize app when page loads
+// Initialize app when page loads - go directly to login
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('App initialized');
-    checkSystemSetup();
+    console.log('App initialized - showing login');
+    showLoginScreen();
 });

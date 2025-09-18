@@ -203,15 +203,6 @@
             transition: width 0.3s;
         }
         
-        .setup-container {
-            text-align: center;
-        }
-        
-        .setup-icon {
-            font-size: 64px;
-            margin-bottom: 20px;
-        }
-        
         .loading {
             display: inline-block;
             width: 16px;
@@ -299,32 +290,8 @@
 </head>
 <body>
     <div class="container">
-        <!-- Initial Setup Screen -->
-        <div id="setupScreen" class="setup-container">
-            <div class="setup-icon">🚀</div>
-            <h2>Welcome to Judge Panel System</h2>
-            <p style="margin-bottom: 30px; color: #666;">First time setup - Create your admin account</p>
-            
-            <div class="form-group">
-                <label for="setupUsername">Admin Username:</label>
-                <input type="text" id="setupUsername" placeholder="Enter admin username" required>
-            </div>
-            <div class="form-group">
-                <label for="setupPassword">Admin Password:</label>
-                <input type="password" id="setupPassword" placeholder="Enter admin password (min 6 characters)" required>
-            </div>
-            <div class="form-group">
-                <label for="confirmPassword">Confirm Password:</label>
-                <input type="password" id="confirmPassword" placeholder="Confirm admin password" required>
-            </div>
-            <button class="btn" onclick="createInitialAdmin()" id="setupBtn">
-                Create Admin Account
-            </button>
-            <div id="setupMessage"></div>
-        </div>
-
         <!-- Login Screen -->
-        <div id="loginScreen" class="hidden">
+        <div id="loginScreen">
             <div class="header">
                 <h2>🏆 Competition Judge System</h2>
                 <p>Please login to continue</p>
